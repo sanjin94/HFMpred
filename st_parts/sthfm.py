@@ -1,4 +1,6 @@
 import sys
+
+from sklearn.preprocessing import quantile_transform
 sys.path.append('data')
 sys.path.append('icons')
 sys.path.append('dl_models')
@@ -30,6 +32,7 @@ import regression as worker
 #with col2:
 #    st.markdown('## U-value analysis')
 
+
 def app():
     torch.manual_seed(1618)
     uploaded_file = st.sidebar.file_uploader('Upload a file to input data', type='csv')
@@ -43,12 +46,13 @@ def app():
     bsize = st.sidebar.number_input('Specify batch size', value=64)
     nlayers = st.sidebar.number_input('Specify number of LSTM layers', min_value=0, value=32)
     device = st.sidebar.selectbox('Specify execution device', ['cuda', 'cpu'])
-    dropout = st.sidebar.number_input('Specify dropout probability', min_value=0.00, max_value=1.00, value=0.20)
+    dropout = st.sidebar.number_input('Specify dropout probability', min_value=0.00, max_value=1.00, value=0.30)
     select_optimizer = st.sidebar.selectbox('Select optimizer', ['Adam', 'SGD'])
     nepochs = st.sidebar.number_input('Specify number of epochs', min_value=1, value=50)
     model_name = st.sidebar.text_input('Specify model name', value=file_name[0:-4]+'_LSTM_b'+str(bsize)+'_nl'+str(nlayers)+'_pd'+str(dropout)[2:]+'_op'+select_optimizer)
-    avg_const = st.sidebar.number_input('Specify average constant:', min_value=1, max_value=60, value=10)
-    regularization = st.sidebar.checkbox('Regularization', value=True)
+    avg_const = st.sidebar.number_input('Specify average constant:', min_value=1, max_value=60, value=1)
+    #regularization = st.sidebar.checkbox('Regularization', value=True)
+    model_save = st.sidebar.checkbox('Model save', value=False)
     run_button = st.sidebar.button('Run')
 
     if run_button:
@@ -84,32 +88,6 @@ def app():
 
         info = st.empty()
 
-        u_list = []
-        for i in range(len(v1_train.flatten())):
-            n = i + 1
-            deltat = v1_train.flatten().cpu().numpy()
-            q = v2_train.flatten().cpu().numpy()
-            deltat = np.sum(deltat[0:n]) / (n + 1)
-            q = np.sum(q[0:n]) / (n + 1)
-            u = q / deltat
-            u_list.append(u)
-
-        u_train = torch.tensor(u_list).view(bdiv, 1, bsize).to(device).float()
-
-        u_list = []
-        for i in range(len(v1_validation)):
-            n = i + 1
-            deltat = v1_validation.copy()
-            q = v2_validation.copy()
-            deltat = np.sum(deltat[0:n]) / (n + 1)
-            q = np.sum(q[0:n]) / (n + 1)
-            u = q / deltat
-            u_list.append(u)
-
-        u_validation = np.array(u_list)
-
-        #regulizer = u_train
-
         for epoch in range(nepochs):
             loss_epoch = []
             start_time = time.time()
@@ -123,10 +101,10 @@ def app():
                     regulizer = regulizer.flatten()
                     st.warning('WARRNING! Device = "cpu"!')
                 loss = loss_fn(pred, regulizer[batch][0])
-                if regularization == True:
-                    l2_lambda = 0.001
-                    l2_norm = torch.tensor(sum(p.pow(2.0).sum() for p in model.parameters())).to(device).float()
-                    loss += l2_lambda * l2_norm
+                #if regularization == True:
+                #    l2_lambda = 0.001
+                #    l2_norm = torch.tensor(sum(p.pow(2.0).sum() for p in model.parameters())).to(device).float()
+                #    loss += l2_lambda * l2_norm
                 loss.backward()
                 optimizer.step()
                 loss_epoch.append(loss.item())
@@ -151,12 +129,24 @@ def app():
                 loss_val_list.append(loss_val)
             info.warning(f'Epoch: {epoch}, train loss: {loss.item()}, validation loss: {loss_val.item()} execution per epoch: {time.time() - start_time}')
 
+        bdiv_all = int((len(v2_train.flatten()) + len(v2_validation.flatten())) / bsize)
+        v1_comb = torch.cat((v1_train.flatten(), v1_validation.flatten())).view(bdiv_all, 1, bsize)
+        v2_comb = torch.cat((v2_train.flatten(), torch.tensor(v2_validation))).view(bdiv_all, 1, bsize)
+
+        q_pred = np.array([])
+        with torch.no_grad():
+            for batch in range(bdiv_all):
+                model.eval()
+                q_prediction = model.forward(v1_comb[batch][0])
+                q_prediction = torch.flatten(q_prediction).cpu().detach().numpy()
+                q_pred = np.append(q_pred, q_prediction)
+
         fig, ax = plt.subplots()
         fig.set_size_inches(8, 5)
         ax.scatter(split_list[2], split_list[0], s=0.2, color=(0.5, 0.2, 0.5))
         ax.scatter(split_list[2], split_list[1], s=0.2, color=(0.1, 0.2, 0.5))
-        ax.scatter(split_list[5], split_list[3], s=0.2, color=(0.5, 0.2, 0.5, 0.2))
-        ax.scatter(split_list[5], split_list[4], s=0.2, color=(0.1, 0.2, 0.5, 0.2))
+        ax.scatter(split_list[5], split_list[3], s=0.2, color=(0.5, 0.4, 0.5, 0.4))
+        ax.scatter(split_list[5], split_list[4], s=0.2, color=(0.1, 0.4, 0.5, 0.4))
 
         col1, col2 = st.columns([3, 3])
         with col1:
@@ -170,16 +160,21 @@ def app():
 
         fig, ax = plt.subplots()
         fig.set_size_inches(13, 8)
-        ax.scatter(x1, v2_train[0:len(x1)], s=0.2, color=(0.1, 0.2, 0.5))
-        ax.plot(x1, prediction_train[0:len(x1)])
-        ax.scatter(x2, v2_validation[0:len(x2)], s=0.2, color=(0.1, 0.2, 0.5, 0.4))
-        ax.plot(x2, prediction_validation[0:len(x2)])
-
+        ax.scatter([i for i in range(bsize*bdiv_all)], v2_comb.flatten(), s=0.2, color=(0.1, 0.2, 0.5))
+        ax.plot(q_pred, color=(0.5, 0.2, 0.5))
+        u_m, U_m = worker.u_val(v1_comb.cpu().flatten().numpy(), v2_comb.cpu().flatten().numpy())
+        u_p, U_p = worker.u_val(v1_comb.cpu().flatten().numpy(), q_pred)
+        ax2 = ax.twinx()
+        ax2.set_ylim([-5, 5])
+        ax2.plot(u_m)
+        ax2.plot(u_p)
         st.pyplot(fig)
+        print(abs((U_m - U_p) / U_p) * 100)
 
         # Saving the model
-        model_name = 'results/models/' + model_name + '.pt'
-        torch.save(model, model_name)
+        if model_save:
+            model_name = 'results/models/' + model_name + '.pt'
+            torch.save(model, model_name)
 
 ## popravi prijelaz između vektora!
 ## pogledaj warning za torch tensor!

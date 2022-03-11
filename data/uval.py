@@ -1,5 +1,3 @@
-from logging import Formatter
-from os import stat_result
 import numpy as np
 from numpy.lib.index_tricks import index_exp
 import pandas as pd

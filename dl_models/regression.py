@@ -109,3 +109,13 @@ class MLP(nn.Module):
         x = linear(x)
         return x
 
+def u_val(delta_t, q_):
+    u_list = np.array([])
+    for i in range(len(delta_t)):
+        n = i + 1
+        dt = np.sum(delta_t[0:n]) / n
+        q = np.sum(q_[0:n]) / n
+        u = -q / dt
+        u_list = np.append(u_list, u)
+
+    return u_list, u
