@@ -1,12 +1,12 @@
 import sys
 
-from sklearn.preprocessing import quantile_transform
 sys.path.append('data')
 sys.path.append('icons')
 sys.path.append('dl_models')
 
-from PIL import Image
 import os
+import csv
+from PIL import Image
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,6 +15,7 @@ import torch
 import time
 import regression as worker
 
+cm = 1/2.54
 
 def app():
     torch.manual_seed(1618)
@@ -26,13 +27,13 @@ def app():
     filenames = os.listdir('data/model_input')
     file_name = st.sidebar.selectbox('Select input file', filenames)
     train_validation = st.sidebar.number_input('Specify train/valdiation ratio:', value=0.75)
-    bsize = st.sidebar.number_input('Specify batch size', value=64)
-    nlayers = st.sidebar.number_input('Specify number of LSTM layers', min_value=0, value=32)
+    bsize = st.sidebar.number_input('Specify batch size', value=128)
+    nlayers = st.sidebar.number_input('Specify number of LSTM layers', min_value=0, value=8)
     device = st.sidebar.selectbox('Specify execution device', ['cuda', 'cpu'])
-    dropout = st.sidebar.number_input('Specify dropout probability', min_value=0.00, max_value=1.00, value=0.30)
+    dropout = st.sidebar.number_input('Specify dropout probability', min_value=0.00, max_value=1.00, value=0.50)
     select_optimizer = st.sidebar.selectbox('Select optimizer', ['Adam', 'SGD'])
     nepochs = st.sidebar.number_input('Specify number of epochs', min_value=1, value=50)
-    model_name = st.sidebar.text_input('Specify model name', value=file_name[0:-4]+'_LSTM_b'+str(bsize)+'_nl'+str(nlayers)+'_pd'+str(dropout)[2:]+'_op'+select_optimizer)
+    model_name = st.sidebar.text_input('Specify model name', value=file_name[0:-4]+'_tv' + str(train_validation)[2:]+'_b'+str(bsize)+'_nl'+str(nlayers)+'_pd'+str(dropout)[2:]+'_op'+select_optimizer)
     avg_const = 1 #st.sidebar.number_input('Specify average constant:', min_value=1, max_value=60, value=1)
     model_save = st.sidebar.checkbox('Model save', value=False)
     run_button = st.sidebar.button('Run')
@@ -77,11 +78,16 @@ def app():
                 #start_time = time.time()
                 optimizer.zero_grad()
                 pred = model.forward(v1_train[batch][0])
+                loss = loss_fn(pred, regulizer[batch][0])
                 if regulizer.device != pred.device:
                     regulizer = regulizer.to('cpu').float()
                     regulizer = regulizer.flatten()
                     st.warning('WARRNING! Device = "cpu"!')
-                loss = loss_fn(pred, regulizer[batch][0])
+                l2_lambda = 0.4
+                l2_reg = torch.tensor(0.).to(device)
+                for param in model.parameters():
+                    l2_reg += torch.norm(param).to(device)
+                loss += l2_lambda * l2_reg
                 loss.backward()
                 optimizer.step()
                 loss_epoch.append(loss.item())
@@ -118,80 +124,90 @@ def app():
                 q_prediction = torch.flatten(q_prediction).cpu().detach().numpy()
                 q_pred = np.append(q_pred, q_prediction)
 
-        input_plt_name = model_name + '_input'
-        loss_plt_name = model_name + '_loss'
-        results_plt_name = model_name + '_results'
-        fig, ax = plt.subplots()
-        fig.set_size_inches(13, 8)
-        ax.set_title('Ulazni podaci')
-        ax.set_xlabel('Vrijeme [minute]')
-        ax.set_ylabel('Razlika temperature [°C]')
-        ax2 = ax.twinx()
-        ax2.set_ylabel('Toplinski tok [$W / m^2$]')
-        ax.scatter(split_list[2], split_list[0], s=0.2, color=(0.5, 0.2, 0.5))
-        ax2.scatter(split_list[2], split_list[1], s=0.2, color=(0.1, 0.2, 0.5))
-        ax.scatter(split_list[5], split_list[3], s=0.2, color=(0.5, 0.4, 0.5, 0.4))
-        ax2.scatter(split_list[5], split_list[4], s=0.2, color=(0.1, 0.4, 0.5, 0.4))
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0 + box.height * 0.2,
-                          box.width, box.height * 0.8])
-        ax.legend(['$\Delta T$ trening', '$\Delta T$ validacija'], loc='lower center', markerscale=5,
-                  bbox_to_anchor=(0.35, -0.35), fancybox=True)
-        ax2.legend(['q trening', 'q validacija'], loc='lower center', markerscale=5,
-                   bbox_to_anchor=(0.65, -0.35), fancybox=True)
-        plt.savefig('results/input_train_validation/' + input_plt_name)
+        q_heading = 'q_pred' + model_name
+        with open('results/' + model_name + '.csv') as file:
+            write = csv.writer(file)
+            write.writerow(q_heading)
+            write.writerows(q_pred[i] for i in range(len(q_pred)))
 
-        col1, col2, col3 = st.columns([0.5, 3, 0.5])
-        with col2:
-            st.pyplot(fig)
-        fig, ax = plt.subplots()
-        fig.set_size_inches(13, 8)
-        ax.set_title('Gubitak treninga i validacije')
-        ax.set_xlabel('Epoha')
-        ax.set_ylabel('MSE gubitak')
-        ax.plot(loss_list, color=(0.5, 0.4, 0.5, 0.6))
-        ax.plot(loss_val_list, color=(0.1, 0.4, 0.5, 0.6))
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0 + box.height * 0.2,
-                         box.width, box.height * 0.8])
-        ax.legend(['Gubitak treninga', 'Gubitak validacije'], loc='lower center',
-                    bbox_to_anchor=(0.5, -0.35), fancybox=True)
-        plt.savefig('results/losses/' + loss_plt_name)
-        col1, col2, col3 = st.columns([0.5, 3, 0.5])
-        with col2:
-            st.pyplot(fig)
-
-        fig, ax = plt.subplots()
-        fig.set_size_inches(13, 8)
-        ax.scatter([i for i in range(bsize*bdiv_all)], v2_comb.flatten(), s=0.2, color=(0.1, 0.2, 0.5))
-        ax.plot(q_pred, color=(0.5, 0.2, 0.5))
         u_m, U_m = worker.u_val(v1_comb.cpu().flatten().numpy(), v2_comb.cpu().flatten().numpy())
         u_p, U_p = worker.u_val(v1_comb.cpu().flatten().numpy(), q_pred)
-        ax.set_xlabel('Vrijeme [minute]')
-        ax.set_ylabel('Toplinski tok [$W / m^2$]')
-        ax2 = ax.twinx()
-        ax2.set_ylim([-7, 7])
-        ax2.plot(u_m, color=(0.5, 0.4, 0.5, 0.4))
-        ax2.plot(u_p, color=(0.1, 0.4, 0.5, 0.4))
-        ax2.set_ylabel('U vrijednost [W/($m^2K$)]')
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0 + box.height * 0.2,
+        abs_error = round(abs((U_m - U_p) / U_p) * 100, 2)
+
+        fig, axs = plt.subplots(3, figsize=(8, 13))
+        #fig.set_size_inches(8, 13)
+        #gs = fig.add_gridspec(5, hspace=0)
+        #axs = gs.subplots(figsize=(13, 8))
+        # izbaci kasnije
+        fig.suptitle(f'{model_name}, greška: {"{0:.2f}".format(abs_error)} %')
+        axs[0].set_title('Ulazni podaci')
+        axs[0].set_xlabel('Vrijeme [minute]')
+        axs[0].set_ylabel('Razlika temperature [°C]')
+        ax2 = axs[0].twinx()
+        ax2.set_ylabel('Toplinski tok [$W / m^2$]')
+        axs[0].scatter(split_list[2], split_list[0], s=0.2, color=(0.5, 0.2, 0.5))
+        ax2.scatter(split_list[2], split_list[1], s=0.2, color=(0.1, 0.2, 0.5))
+        axs[0].scatter(split_list[5], split_list[3], s=0.2, color=(0.5, 0.4, 0.5, 0.4))
+        ax2.scatter(split_list[5], split_list[4], s=0.2, color=(0.1, 0.4, 0.5, 0.4))
+        box = axs[0].get_position()
+        axs[0].set_position([box.x0, box.y0 + box.height * 0.2,
+                          box.width, box.height * 0.8])
+        axs[0].legend(['$\Delta T$ trening', '$\Delta T$ validacija'], loc='lower center', markerscale=5,
+                  bbox_to_anchor=(0.25, -0.35), fancybox=True)
+        ax2.legend(['q trening', 'q validacija'], loc='lower center', markerscale=5,
+                   bbox_to_anchor=(0.75, -0.35), fancybox=True)
+        #plt.savefig('results/input_train_validation/' + input_plt_name)
+
+        #col1, col2, col3 = st.columns([0.5, 3, 0.5])
+        #with col2:
+        #    st.pyplot(fig)
+        #fig, ax = plt.subplots()
+        #fig.set_size_inches(13, 8)
+        axs[1].set_title('Gubitak treninga i validacije')
+        axs[1].set_xlabel('Epoha')
+        axs[1].set_ylabel('MSE gubitak')
+        axs[1].plot(loss_list, color=(0.5, 0.4, 0.5, 0.6))
+        axs[1].plot(loss_val_list, color=(0.1, 0.4, 0.5, 0.6))
+        box = axs[1].get_position()
+        axs[1].set_position([box.x0, box.y0 + box.height * 0.2,
                          box.width, box.height * 0.8])
-        ax.legend(['q predikcija', 'q mjereno'], loc='lower center', markerscale=5,
-                  bbox_to_anchor=(0.35, -0.35), fancybox=True)
-        ax2.legend(['U mjereno', 'U predikcija'], loc='lower center', markerscale=5,
-                   bbox_to_anchor=(0.65, -0.35), fancybox=True)
-        plt.savefig('results/predictions/' + results_plt_name)
+        axs[1].legend(['Gubitak treninga', 'Gubitak validacije'], loc='lower center',
+                    bbox_to_anchor=(0.25, -0.35), fancybox=True)
+        #plt.savefig('results/losses/' + loss_plt_name)
+        #col1, col2, col3 = st.columns([0.5, 3, 0.5])
+        #with col2:
+        #    st.pyplot(fig)
+
+        #fig, ax = plt.subplots()
+        #fig.set_size_inches(13, 8)
+        axs[2].scatter([i for i in range(bsize*bdiv_all)], v2_comb.flatten(), s=0.2, color=(0.1, 0.2, 0.5))
+        axs[2].plot(q_pred, color=(0.5, 0.2, 0.5))
+        axs[2].set_title('Evaluacija modela strojnoga učenja')
+        axs[2].set_xlabel('Vrijeme [minute]')
+        axs[2].set_ylabel('Toplinski tok [$W / m^2$]')
+        ax3 = axs[2].twinx()
+        ax3.set_ylim([-7, 7])
+        ax3.plot(u_m, color=(0.5, 0.4, 0.5, 0.4))
+        ax3.plot(u_p, color=(0.1, 0.4, 0.5, 0.4))
+        ax3.set_ylabel('U vrijednost [W/($m^2K$)]')
+        box = axs[2].get_position()
+        axs[2].set_position([box.x0, box.y0 + box.height * 0.2,
+                         box.width, box.height * 0.8])
+        axs[2].legend(['q predikcija', 'q mjereno'], loc='lower center', markerscale=5,
+                  bbox_to_anchor=(0.25, -0.35), fancybox=True)
+        ax3.legend(['U mjereno', 'U predikcija'], loc='lower center', markerscale=5,
+                   bbox_to_anchor=(0.75, -0.35), fancybox=True)
+        plt.savefig('results/plots/' + model_name + '.png', dpi=300)
         col1, col2, col3 = st.columns([0.5, 3, 0.5])
         with col2:
             st.pyplot(fig)
-        print(abs((U_m - U_p) / U_p) * 100)
+
+        print(U_m, U_p, abs_error)
 
         # Saving the model
         if model_save:
             model_name = 'results/models/' + model_name + '.pt'
             torch.save(model, model_name)
 
-## popravi prijelaz između vektora!
 ## pogledaj warning za torch tensor!
 ## Popravi da Run uvijek radi
