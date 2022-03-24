@@ -31,9 +31,10 @@ def app():
     nlayers = st.sidebar.number_input('Specify number of LSTM layers', min_value=0, value=8)
     device = st.sidebar.selectbox('Specify execution device', ['cuda', 'cpu'])
     dropout = st.sidebar.number_input('Specify dropout probability', min_value=0.00, max_value=1.00, value=0.50)
-    select_optimizer = st.sidebar.selectbox('Select optimizer', ['Adam', 'SGD'])
+    select_l2l = st.sidebar.number_input('Select lambda for l2 reg', value=0.005, min_value=0.0001)
     nepochs = st.sidebar.number_input('Specify number of epochs', min_value=1, value=50)
-    model_name = st.sidebar.text_input('Specify model name', value=file_name[0:-4]+'_tv' + str(train_validation)[2:]+'_b'+str(bsize)+'_nl'+str(nlayers)+'_pd'+str(dropout)[2:]+'_op'+select_optimizer)
+    model_name = st.sidebar.text_input('Specify model name', value=file_name[0:-4]+'_tv' + str(train_validation)[
+                                       2:]+'_b'+str(bsize)+'_nl'+str(nlayers)+'_pd'+str(dropout)[2:]+'_l2l'+str(select_l2l)[2:])
     avg_const = 1 #st.sidebar.number_input('Specify average constant:', min_value=1, max_value=60, value=1)
     model_save = st.sidebar.checkbox('Model save', value=False)
     run_button = st.sidebar.button('Run')
@@ -50,10 +51,7 @@ def app():
             st.warning('Batch size is greater than the vector length! bsize = len(vector)')
 
         model = worker.Dl_model(bsize=bsize, nlayers=nlayers, device=device, dropout=dropout)#worker.MLP(bsize=bsize, nperceptrons=3, device=device, dropout=dropout)#
-        if select_optimizer == 'Adam':
-            optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-        elif select_optimizer == 'SGD':
-            optimizer = torch.optim.SGD(model.parameters(), lr=1e-2, momentum=0.9)
+        optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
         loss_fn = torch.nn.MSELoss()
         bdiv = int(len(v1_train) / bsize)
         regulizer = v2_train[0:bsize*bdiv].to(device).float().view(bdiv, 1, bsize)
@@ -83,7 +81,7 @@ def app():
                     regulizer = regulizer.to('cpu').float()
                     regulizer = regulizer.flatten()
                     st.warning('WARRNING! Device = "cpu"!')
-                l2_lambda = 0.4
+                l2_lambda = 0
                 l2_reg = torch.tensor(0.).to(device)
                 for param in model.parameters():
                     l2_reg += torch.norm(param).to(device)
@@ -124,11 +122,11 @@ def app():
                 q_prediction = torch.flatten(q_prediction).cpu().detach().numpy()
                 q_pred = np.append(q_pred, q_prediction)
 
-        q_heading = 'q_pred' + model_name
-        with open('results/' + model_name + '.csv') as file:
+        q_heading = ['q_pred_' + model_name]
+        with open('results/q_pred/' + model_name + '.csv', 'w') as file:
             write = csv.writer(file)
             write.writerow(q_heading)
-            write.writerows(q_pred[i] for i in range(len(q_pred)))
+            write.writerows([q_pred[i]] for i in range(len(q_pred)))
 
         u_m, U_m = worker.u_val(v1_comb.cpu().flatten().numpy(), v2_comb.cpu().flatten().numpy())
         u_p, U_p = worker.u_val(v1_comb.cpu().flatten().numpy(), q_pred)
