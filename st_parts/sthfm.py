@@ -10,6 +10,7 @@ from PIL import Image
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import streamlit as st
 import torch
 import time
@@ -31,7 +32,7 @@ def app():
     nlayers = st.sidebar.number_input('Specify number of LSTM layers', min_value=0, value=8)
     device = st.sidebar.selectbox('Specify execution device', ['cuda', 'cpu'])
     dropout = st.sidebar.number_input('Specify dropout probability', min_value=0.00, max_value=1.00, value=0.50)
-    select_l2l = st.sidebar.number_input('Select lambda for l2 reg', value=0.005, min_value=0.0001)
+    select_l2l = st.sidebar.number_input('Select lambda for l2 reg', value=0.0005, min_value=0.0000)
     nepochs = st.sidebar.number_input('Specify number of epochs', min_value=1, value=50)
     model_name = st.sidebar.text_input('Specify model name', value=file_name[0:-4]+'_tv' + str(train_validation)[
                                        2:]+'_b'+str(bsize)+'_nl'+str(nlayers)+'_pd'+str(dropout)[2:]+'_l2l'+str(select_l2l)[2:])
@@ -76,16 +77,15 @@ def app():
                 #start_time = time.time()
                 optimizer.zero_grad()
                 pred = model.forward(v1_train[batch][0])
-                loss = loss_fn(pred, regulizer[batch][0])
                 if regulizer.device != pred.device:
                     regulizer = regulizer.to('cpu').float()
                     regulizer = regulizer.flatten()
                     st.warning('WARRNING! Device = "cpu"!')
-                l2_lambda = 0
-                l2_reg = torch.tensor(0.).to(device)
-                for param in model.parameters():
-                    l2_reg += torch.norm(param).to(device)
-                loss += l2_lambda * l2_reg
+                loss = loss_fn(pred, regulizer[batch][0])
+                #l2_reg = torch.tensor(0.).to(device)
+                #for param in model.parameters():
+                #    l2_reg += torch.norm(param).to(device)
+                #loss += select_l2l * l2_reg
                 loss.backward()
                 optimizer.step()
                 loss_epoch.append(loss.item())
@@ -132,21 +132,81 @@ def app():
         u_p, U_p = worker.u_val(v1_comb.cpu().flatten().numpy(), q_pred)
         abs_error = round(abs((U_m - U_p) / U_p) * 100, 2)
 
+        fig = plt.figure(figsize=(8, 8))
+        G = gridspec.GridSpec(3, 2)
+
+        #### HFM input and prediction ###
+        axes_1 = fig.add_subplot(G[0:2,:])
+        axes_1.set_title('Ulazni podaci')
+        axes_1.set_xlabel('Vrijeme [minute]')
+        axes_1.set_ylabel('Razlika temperature [°C]')
+        axes_2 = axes_1.twinx()
+        axes_2.set_ylabel('Toplinski tok [$W / m^2$]')
+        axes_1.scatter(split_list[2], split_list[0],
+                       s=0.2, color=(0.5, 0.2, 0.5))
+        axes_2.scatter(split_list[2], split_list[1],
+                       s=0.2, color=(0.1, 0.2, 0.5))
+        axes_1.scatter(split_list[5], split_list[3],
+                       s=0.2, color=(0.5, 0.4, 0.5, 0.4))
+        axes_2.scatter(split_list[5], split_list[4],
+                       s=0.2, color=(0.1, 0.4, 0.5, 0.4))
+        axes_2.plot(q_pred, color=(0.1, 0.2, 0.7, 0.6))
+        box = axes_1.get_position()
+        axes_1.set_position([box.x0, box.y0 + box.height * 0.2,
+                             box.width, box.height * 0.8])
+        axes_1.legend(['$\Delta T$ trening', '$\Delta T$ validacija'], loc='lower center', markerscale=5,
+                      bbox_to_anchor=(0.25, -0.35), fancybox=True)
+        axes_2.legend(['q predikcija', 'q trening', 'q validacija'], loc='lower center', markerscale=5,
+                      bbox_to_anchor=(0.75, -0.35), fancybox=True)
+
+        ### Training and validation losses
+        axes_3 = fig.add_subplot(G[2,0])
+        axes_3.set_title('Gubitak treninga i validacije')
+        axes_3.set_xlabel('Epoha')
+        axes_3.set_ylabel('MSE gubitak')
+        loss_list = np.sqrt(loss_list)
+        loss_val_list = np.sqrt(loss_val_list)
+        axes_3.plot(loss_list, color=(0.5, 0.4, 0.5, 0.6))
+        axes_3.plot(loss_val_list, color=(0.1, 0.4, 0.5, 0.6))
+        box = axes_3.get_position()
+        axes_3.set_position([box.x0, box.y0 + box.height * 0.2,
+                             box.width, box.height * 0.8])
+        axes_3.legend(['Gubitak treninga', 'Gubitak validacije'], loc='lower center',
+                      bbox_to_anchor=(0.25, -0.35), fancybox=True)
+
+        ### Predicted v.s. measured
+        axes_4 = fig.add_subplot(G[2,1])
+        axes_4.set_title('Odnos predikcija / izmjereno')
+        axes_4.set_xlabel('Toplinski tok - izmjereno')
+        axes_4.set_ylabel('Toplinski tok - predikcija')
+        axes_4.scatter(v2_comb.flatten(), q_pred, s=0.05, color=(0.1, 0.4, 0.5, 0.2))
+        min_q = int(np.min([v2_comb.flatten().numpy(), q_pred]))
+        max_q = int(np.max([v2_comb.flatten().numpy(), q_pred]))
+        axes_4.plot([i for i in range(min_q, max_q)],
+                    [i for i in range(min_q, max_q)], color=(0.5, 0.4, 0.5))
+        box = axes_4.get_position()
+        axes_4.set_position([box.x0, box.y0 + box.height * 0.2,
+                             box.width, box.height * 0.8])
+
+        col1, col2, col3 = st.columns([0.5, 3, 0.5])
+        with col2:
+            st.pyplot(fig)
+
         fig, axs = plt.subplots(3, figsize=(8, 13))
-        #fig.set_size_inches(8, 13)
-        #gs = fig.add_gridspec(5, hspace=0)
-        #axs = gs.subplots(figsize=(13, 8))
-        # izbaci kasnije
+
         fig.suptitle(f'{model_name}, greška: {"{0:.2f}".format(abs_error)} %')
         axs[0].set_title('Ulazni podaci')
         axs[0].set_xlabel('Vrijeme [minute]')
         axs[0].set_ylabel('Razlika temperature [°C]')
         ax2 = axs[0].twinx()
         ax2.set_ylabel('Toplinski tok [$W / m^2$]')
+
         axs[0].scatter(split_list[2], split_list[0], s=0.2, color=(0.5, 0.2, 0.5))
         ax2.scatter(split_list[2], split_list[1], s=0.2, color=(0.1, 0.2, 0.5))
+
         axs[0].scatter(split_list[5], split_list[3], s=0.2, color=(0.5, 0.4, 0.5, 0.4))
         ax2.scatter(split_list[5], split_list[4], s=0.2, color=(0.1, 0.4, 0.5, 0.4))
+
         box = axs[0].get_position()
         axs[0].set_position([box.x0, box.y0 + box.height * 0.2,
                           box.width, box.height * 0.8])
@@ -154,13 +214,7 @@ def app():
                   bbox_to_anchor=(0.25, -0.35), fancybox=True)
         ax2.legend(['q trening', 'q validacija'], loc='lower center', markerscale=5,
                    bbox_to_anchor=(0.75, -0.35), fancybox=True)
-        #plt.savefig('results/input_train_validation/' + input_plt_name)
 
-        #col1, col2, col3 = st.columns([0.5, 3, 0.5])
-        #with col2:
-        #    st.pyplot(fig)
-        #fig, ax = plt.subplots()
-        #fig.set_size_inches(13, 8)
         axs[1].set_title('Gubitak treninga i validacije')
         axs[1].set_xlabel('Epoha')
         axs[1].set_ylabel('MSE gubitak')
@@ -171,13 +225,7 @@ def app():
                          box.width, box.height * 0.8])
         axs[1].legend(['Gubitak treninga', 'Gubitak validacije'], loc='lower center',
                     bbox_to_anchor=(0.25, -0.35), fancybox=True)
-        #plt.savefig('results/losses/' + loss_plt_name)
-        #col1, col2, col3 = st.columns([0.5, 3, 0.5])
-        #with col2:
-        #    st.pyplot(fig)
 
-        #fig, ax = plt.subplots()
-        #fig.set_size_inches(13, 8)
         axs[2].scatter([i for i in range(bsize*bdiv_all)], v2_comb.flatten(), s=0.2, color=(0.1, 0.2, 0.5))
         axs[2].plot(q_pred, color=(0.5, 0.2, 0.5))
         axs[2].set_title('Evaluacija modela strojnoga učenja')
