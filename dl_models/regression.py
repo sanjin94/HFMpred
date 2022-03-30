@@ -119,3 +119,37 @@ def u_val(delta_t, q_):
         u_list = np.append(u_list, u)
 
     return u_list, u
+
+def q_sum(q_m, q_p):
+    q_msum = np.array([])
+    q_psum = np.array([])
+    for i in range(len(q_m)):
+        n = i + 1
+        q_ms = abs(np.sum(q_m[0:n]))
+        q_ps = abs(np.sum(q_p[0:n]))
+        q_msum = np.append(q_msum, q_ms)
+        q_psum = np.append(q_psum, q_ps)
+    return q_msum, q_psum
+
+def rsq_k1(pred, actual):
+    try:
+        if actual.is_cuda:
+            pred = pred.cpu().float().detach().numpy()
+            actual = actual.cpu().float().detach().numpy()
+    except:
+        pass
+    pred = np.array(pred)
+    actual = np.array(actual)
+    actual_mean = np.sum(actual) / len(actual)
+    rss_k1 = 0
+    tss = 0
+    for i in range(len(pred)):
+        rss_k1 += (pred[i] - actual[i])**2
+        tss += (actual[i] - actual_mean)**2
+    return 1 - rss_k1 / tss
+
+def rel_err(true, pred):
+    list = []
+    for i in range(len(pred)):
+        list.append((pred[i]-true[i])/true[i]*100)
+    return list
