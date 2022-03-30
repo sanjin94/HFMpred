@@ -212,8 +212,8 @@ def app():
         if min_ < 0:
             min_ = 0
         ax1.set_ylim([min_, int(expected_u) + 3])
-        ax1.plot(u_m, color=(0.5, 0.4, 0.5, 0.4))
-        ax1.plot(u_p, color=(0.1, 0.4, 0.5, 0.4))
+        ax1.plot(u_m, color=(0.1, 0.2, 0.5, 0.4))
+        ax1.plot(u_p, color=(0.5, 0.2, 0.5, 0.4))
         ax1.plot([i for i in range(len(u_m))],
                  [expected_u for i in range(len(u_m))], color=(0.1, 0.1, 0.1, 0.4),
                  linestyle='--')
@@ -223,9 +223,9 @@ def app():
         ax1.set_position([box.x0, box.y0 + box.height * 0.2,
                           box.width, box.height * 0.8])
         ax1.legend(['U-vrijednost (mjerenje)', 'U-vrijednost (procjena)', 'U-vrijednost (očekivana)'],
-                   loc='lower center', markerscale=5, bbox_to_anchor=(0.25, -0.7), fancybox=True, fontsize=9)
+                   loc='lower center', markerscale=5, bbox_to_anchor=(0.15, -0.7), fancybox=True, fontsize=9)
         ax2.legend(['Toplinski tok (mjerenje)', 'Toplinski tok (procjena)'], loc='lower center', markerscale=5,
-                   bbox_to_anchor=(0.75, -0.7), fancybox=True, fontsize=9)
+                   bbox_to_anchor=(0.85, -0.7), fancybox=True, fontsize=9)
 
         ax3 = fig.add_subplot(G[4:7, 0])
         ax3.set_xlabel('Vrijeme [minute]')
