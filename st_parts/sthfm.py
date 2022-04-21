@@ -185,7 +185,7 @@ def app():
         q_msum, q_psum = worker.q_sum(v2_comb.flatten().numpy(), q_pred)
         min_q = int(np.min([q_msum, q_psum]))
         max_q = int(np.max([q_msum, q_psum]))
-        axes_4.scatter(q_msum, q_psum, s=0.05, color=(0.1, 0.4, 0.5, 0.1))
+        axes_4.scatter(q_msum, q_psum, s=0.2, color=(0.1, 0.4, 0.5, 0.1))
         axes_4.plot([i for i in range(min_q, max_q)],
                     [i for i in range(min_q, max_q)], linestyle='--')
         print(f'linregress: {scipy.stats.linregress(q_psum, q_msum)}')
