@@ -132,7 +132,8 @@ def app():
 
         u_m, U_m = worker.u_val(v1_comb.cpu().flatten().numpy(), v2_comb.cpu().flatten().numpy())
         u_p, U_p = worker.u_val(v1_comb.cpu().flatten().numpy(), q_pred)
-        rel_error = round(abs((U_m - U_p) / U_m) * 100, 2)
+        rel_errorp = round(abs((expected_u - U_p) / expected_u) * 100, 2)
+        rel_errorm = round(abs((expected_u - U_m) / expected_u) * 100, 2)
 
         fig = plt.figure(figsize=(9, 9))
         #fig.suptitle(f'{model_name}, greška: {"{0:.2f}".format(abs_error)} %')
@@ -185,7 +186,7 @@ def app():
         q_msum, q_psum = worker.q_sum(v2_comb.flatten().numpy(), q_pred)
         min_q = int(np.min([q_msum, q_psum]))
         max_q = int(np.max([q_msum, q_psum]))
-        axes_4.scatter(q_msum, q_psum, s=0.05, color=(0.1, 0.4, 0.5, 0.1))
+        axes_4.scatter(q_msum, q_psum, s=0.2, color=(0.1, 0.4, 0.5, 0.1))
         axes_4.plot([i for i in range(min_q, max_q)],
                     [i for i in range(min_q, max_q)], linestyle='--')
         print(f'linregress: {scipy.stats.linregress(q_psum, q_msum)}')
@@ -232,8 +233,13 @@ def app():
         ax3.set_ylabel('Relativna pogreška [%]')
         ax3.set_ylim([-55, 55])
         ax3.yaxis.set_ticks([i for i in range(-50, 60, 10)])
-        rel_err = worker.rel_err(u_m, u_p)
-        ax3.plot(rel_err)
+        u_iso = [expected_u for i in range(len(u_m))]
+        rel_err = worker.rel_err(u_iso, u_p)
+        rel_err2 = worker.rel_err(u_iso, u_m)
+        ax3.plot(rel_err, color=(0.5, 0.2, 0.5, 0.4))
+        ax3.plot(rel_err2, color=(0.1, 0.2, 0.5, 0.4))
+        ax3.legend(['$U_{DL}$ relative error', '$U_{HFM}$ relative error'],
+                   loc='lower center', markerscale=5, fancybox=True, fontsize=9)
         ax3.plot([i for i in range(len(u_m))],
                  [-10 for i in range(len(u_m))], linestyle=(0,(1,1)), color='green')
         ax3.plot([i for i in range(len(u_m))],
@@ -242,13 +248,15 @@ def app():
                  [-20 for i in range(len(u_m))], linestyle=(0,(5,5)), color='royalblue')
         ax3.plot([i for i in range(len(u_m))],
                  [20 for i in range(len(u_m))], linestyle=(0,(5,5)), color='royalblue')
+        ax3.plot([i for i in range(len(u_m))],
+                 [0 for i in range(len(u_m))], color='gray')
 
         plt.savefig('results/plots/' + model_name + '.png', dpi=300)
         col1, col2, col3 = st.columns([0.5, 3, 0.5])
         with col2:
             st.pyplot(fig)
 
-        print(U_m, U_p, rel_error)
+        print(f'Um = {U_m}, Up = {U_p}, Uiso = {expected_u}, ErrP = {rel_errorp}, ErrM = {rel_errorm}')
 
         # Saving the model
         if model_save:

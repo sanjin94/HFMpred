@@ -4,13 +4,13 @@ sys.path.append('data')
 sys.path.append('icons')
 
 import streamlit as st
-import uval as U
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from typing import Dict
 import os
 import pandas as pd
+import uval as U
 
 #EMOJI_ICON = "icons/HFMpred.ico"
 #EMOJI_PNG = "icons/HFMpred.png"

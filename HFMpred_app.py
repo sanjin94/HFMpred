@@ -2,9 +2,10 @@ import sys
 
 from multiapp import MultiApp
 sys.path.append('icons')
+sys.path.append('data')
 
 import streamlit as st
-from st_parts import stuval, sthfm, stmeas
+from st_parts import stauto, stuval, sthfm
 
 EMOJI_ICON = "icons/HFMpred.ico"
 EMOJI_PNG = "icons/HFMpred.png"
@@ -21,7 +22,7 @@ with col2:
 
 app = MultiApp()
 app.add_app("HFM results prediction", sthfm.app)
+app.add_app("DL model automation", stauto.app)
 app.add_app("U-value calculation", stuval.app)
-app.add_app("Realtime Measurement", stmeas.app)
 # Main HFMpred app
 app.run()
