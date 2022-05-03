@@ -1,7 +1,10 @@
 # HFMpred
 An app for HFM measuring and prediction
 
-App is started in a following way: \n
-    - open app directory \n
-    - run therminal in it \n
+App is started in a following way:
+
+    - open app directory
+    
+    - run therminal in it
+    
     - start the app with command 'streamlit run HFMpred_app.py'
