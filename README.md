@@ -5,6 +5,6 @@ App is started in a following way:
 
     - open app directory
     
-    - run therminal in it
+    - run terminal in it
     
     - start the app with command 'streamlit run HFMpred_app.py'
