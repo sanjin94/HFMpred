@@ -54,6 +54,7 @@ def app():
         calculate_button = st.button('Calculate')
         st.write('Calculation for the optimal date/time period')
         optimize_button = st.button('Optimize')
+        swap = st.checkbox('2nd time series')
 
     if calculate_button:
         start = str(start_date) + ' ' + str(start_time)
@@ -94,7 +95,13 @@ def app():
         ts_u = vect_o.ex_vect(file_name, first_calc, last_calc, columns)
         u_val = U.U_avg(ts, avg_const, ts_u, first_calc, start)
         avg_l = u_val.ts_average(ts, avg_const)
-        calc_start, calc_end, u_optimal = u_val.u_optim([avg_l[0], avg_l[1], avg_l[4], avg_l[6]], start)
+        if swap:
+            qq = avg_l[5]
+            print('Calculation for 2nd!')
+        else:
+            qq = avg_l[4]
+            print('Calculaation for 1st!')
+        calc_start, calc_end, u_optimal = u_val.u_optim([avg_l[0], avg_l[1], qq, avg_l[6]], start)
         print(calc_start, calc_end, 100 * u_optimal[3:5])
         first_calc, last_calc = ind_o.dfinit(file_name, calc_start, calc_end)
         print(start, end, calc_start, calc_end)

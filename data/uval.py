@@ -394,6 +394,8 @@ class U_avg:
         optim_start_string = optim_start.strftime("%Y-%m-%d %H:%M")
         optim_end_string = optim_end.strftime("%Y-%m-%d %H:%M")
 
+        print(optim_start_string, optim_end_string)
+
         return optim_start_string, optim_end_string, u_store
 
     # Extraction of standard values
@@ -523,15 +525,23 @@ class U_plot:
                 date_list_u.append(self.calc_start + dt.timedelta(minutes=ts[6][i]))
 
             fig1, ax1 = plt.subplots(figsize=(10.16, 6.28))
-            ax1.set_title('HFM results - two sensors')
-            ax1.set_xlabel('Time [date/time]')
-            ax1.set_ylabel('Temperature [°C]')
+            #ax1.set_title('HFM results - two sensors')
+            #ax1.set_xlabel('Time [date/time]')
+            ax1.set_xlabel('Vrijeme [datum]')
+            #ax1.set_ylabel('Temperature [°C]')
+            ax1.set_ylabel('Temperatura [°C]')
+            ax1.tick_params(axis='x', labelrotation=25)
             ax1.plot(date_list, ts[0], color='orangered')
             ax1.plot(date_list, ts[1], color='navy')
 
             ax2 = ax1.twinx()
-            ax2.set_ylabel('Heat flux [$W / m^2$]')
+            ax2.set_ylabel('Toplinski tok [$W / m^2$]')
             ax2.plot(date_list, ts[4], color='forestgreen')
+            y_min, y_max = ax2.get_ylim()
+            if (u_fun[0][-1] - 5) < y_min:
+                y_min = u_fun[0][-1] - 5
+            if (u_fun[0][-1] + 5) > y_max:
+                y_max = u_fun[0][-1] + 5
             ax2.plot(date_list_u, u_fun[0], '--', color='darkmagenta')
 
             ax1.plot(date_list, ts[2], color='darkorange')
@@ -539,6 +549,8 @@ class U_plot:
 
             ax2.plot(date_list, ts[5], color='yellowgreen')
             ax2.plot(date_list_u, u_fun[1],'--', color='hotpink')
+
+            ax2.set_ylim([y_min, y_max])
 
             box = ax1.get_position()
             ax1.set_position([box.x0, box.y0 + box.height * 0.2,
@@ -570,15 +582,23 @@ class U_plot:
                 date_list_u.append(self.calc_start + dt.timedelta(minutes=ts[3][i]))
 
             fig1, ax1 = plt.subplots(figsize=(10.16, 6.28))
-            ax1.set_title('HFM results')
-            ax1.set_xlabel('Time [date/time]')
-            ax1.set_ylabel('Temperature [°C]')
+            #ax1.set_title('HFM results')
+            #ax1.set_xlabel('Time [date/time]')
+            ax1.set_xlabel('Vrijeme [datum]')
+            #ax1.set_ylabel('Temperature [°C]')
+            ax1.set_ylabel('Temperatura [°C]')
             ax1.plot(date_list, ts[0], color='orangered')
             ax1.plot(date_list, ts[1], color='navy')
 
             ax2 = ax1.twinx()
-            ax2.set_ylabel('Heat flux [$W / m^2$]')
+            #ax2.set_ylabel('Heat flux [$W / m^2$]')
+            ax2.set_ylabel('Toplinski tok [$W / m^2$]')
             ax2.plot(date_list, ts[2], color='forestgreen')
+            y_min, y_max = ax2.get_ylim()
+            if (u_fun[0][-1] - 5) < y_min:
+                y_min = u_fun[0][-1] - 5
+            if (u_fun[0][-1] + 5) > y_max:
+                y_max = u_fun[0][-1] + 5
             ax2.plot(date_list_u, u_fun, '--', color='darkmagenta')
 
             box = ax1.get_position()
@@ -588,6 +608,8 @@ class U_plot:
             bbox_to_anchor=(0.5, -0.3), fancybox=True, ncol=5)
             ax2.legend(['$HF_1$', '$U_1$'], loc='lower center',
                        bbox_to_anchor=(0.5, -0.4), fancybox=True, ncol=5)
+
+            ax2.set_ylim([y_min, y_max])
 
             y_min, y_max = ax1.get_ylim()
             ax1.plot([date_list_u[0], date_list_u[0]], [y_min, y_max], ':',

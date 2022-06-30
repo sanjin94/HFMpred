@@ -189,6 +189,7 @@ def app():
         axes_4.scatter(q_msum, q_psum, s=0.2, color=(0.1, 0.4, 0.5, 0.1))
         axes_4.plot([i for i in range(min_q, max_q)],
                     [i for i in range(min_q, max_q)], linestyle='--')
+        axes_4.tick_params(axis='x', labelrotation=33)
         print(f'linregress: {scipy.stats.linregress(q_psum, q_msum)}')
         rsq_k1 = worker.rsq_k1(q_psum, q_msum)
         print(f'Rsquared for k=1: {rsq_k1}')
@@ -209,15 +210,22 @@ def app():
         ax1.set_ylabel('U-vrijednost [W/($m^2K$)]')
         ax2 = ax1.twinx()
         ax2.set_ylabel('Ukupan toplinski tok [$W / m^2$]')
-        min_ = int(expected_u) - 3
-        if min_ < 0:
-            min_ = 0
-        ax1.set_ylim([min_, int(expected_u) + 3])
+        if expected_u != -666:
+            min_ = int(expected_u) - 3
+            if min_ < 0:
+                min_ = 0
+            ax1.set_ylim([min_, int(expected_u) + 3])
+        else:
+            u_mean = (u_m[-1] + u_p[-1]) / 2
+            min_ = u_mean - 1
+            max_ = u_mean + 1
+            ax1.set_ylim([0, max_])
         ax1.plot(u_m, color=(0.1, 0.2, 0.5, 0.4))
         ax1.plot(u_p, color=(0.5, 0.2, 0.5, 0.4))
-        ax1.plot([i for i in range(len(u_m))],
-                 [expected_u for i in range(len(u_m))], color=(0.1, 0.1, 0.1, 0.4),
-                 linestyle='--')
+        if expected_u != -666:
+            ax1.plot([i for i in range(len(u_m))],
+                     [expected_u for i in range(len(u_m))], color=(0.1, 0.1, 0.1, 0.4),
+                     linestyle='--')
         ax2.plot(q_msum, color=(0.1, 0.2, 0.5))
         ax2.plot(q_psum, color=(0.5, 0.2, 0.5))
         box = ax1.get_position()
@@ -227,31 +235,31 @@ def app():
                    loc='lower center', markerscale=5, bbox_to_anchor=(0.15, -0.7), fancybox=True, fontsize=9)
         ax2.legend(['Toplinski tok (mjerenje)', 'Toplinski tok (procjena)'], loc='lower center', markerscale=5,
                    bbox_to_anchor=(0.85, -0.7), fancybox=True, fontsize=9)
+        if expected_u != -666:
+            ax3 = fig.add_subplot(G[4:7, 0])
+            ax3.set_xlabel('Vrijeme [minute]')
+            ax3.set_ylabel('Relativna pogreška [%]')
+            ax3.set_ylim([-55, 55])
+            ax3.yaxis.set_ticks([i for i in range(-50, 60, 10)])
+            u_iso = [expected_u for i in range(len(u_m))]
+            rel_err = worker.rel_err(u_iso, u_p)
+            rel_err2 = worker.rel_err(u_iso, u_m)
+            ax3.plot(rel_err, color=(0.5, 0.2, 0.5, 0.4))
+            ax3.plot(rel_err2, color=(0.1, 0.2, 0.5, 0.4))
+            ax3.legend(['$U_{DL}$ relativna pogreška', '$U_{HFM}$ relativna pogreška'],
+                    loc='lower center', markerscale=5, fancybox=True, fontsize=9)
+            ax3.plot([i for i in range(len(u_m))],
+                    [-10 for i in range(len(u_m))], linestyle=(0,(1,1)), color='green')
+            ax3.plot([i for i in range(len(u_m))],
+                    [10 for i in range(len(u_m))], linestyle=(0,(1,1)), color='green')
+            ax3.plot([i for i in range(len(u_m))],
+                    [-20 for i in range(len(u_m))], linestyle=(0,(5,5)), color='royalblue')
+            ax3.plot([i for i in range(len(u_m))],
+                    [20 for i in range(len(u_m))], linestyle=(0,(5,5)), color='royalblue')
+            ax3.plot([i for i in range(len(u_m))],
+                    [0 for i in range(len(u_m))], color='gray')
 
-        ax3 = fig.add_subplot(G[4:7, 0])
-        ax3.set_xlabel('Vrijeme [minute]')
-        ax3.set_ylabel('Relativna pogreška [%]')
-        ax3.set_ylim([-55, 55])
-        ax3.yaxis.set_ticks([i for i in range(-50, 60, 10)])
-        u_iso = [expected_u for i in range(len(u_m))]
-        rel_err = worker.rel_err(u_iso, u_p)
-        rel_err2 = worker.rel_err(u_iso, u_m)
-        ax3.plot(rel_err, color=(0.5, 0.2, 0.5, 0.4))
-        ax3.plot(rel_err2, color=(0.1, 0.2, 0.5, 0.4))
-        ax3.legend(['$U_{DL}$ relative error', '$U_{HFM}$ relative error'],
-                   loc='lower center', markerscale=5, fancybox=True, fontsize=9)
-        ax3.plot([i for i in range(len(u_m))],
-                 [-10 for i in range(len(u_m))], linestyle=(0,(1,1)), color='green')
-        ax3.plot([i for i in range(len(u_m))],
-                 [10 for i in range(len(u_m))], linestyle=(0,(1,1)), color='green')
-        ax3.plot([i for i in range(len(u_m))],
-                 [-20 for i in range(len(u_m))], linestyle=(0,(5,5)), color='royalblue')
-        ax3.plot([i for i in range(len(u_m))],
-                 [20 for i in range(len(u_m))], linestyle=(0,(5,5)), color='royalblue')
-        ax3.plot([i for i in range(len(u_m))],
-                 [0 for i in range(len(u_m))], color='gray')
-
-        plt.savefig('results/plots/' + model_name + '.png', dpi=300)
+        #plt.savefig('results/plots/' + model_name + '.png', dpi=300)
         col1, col2, col3 = st.columns([0.5, 3, 0.5])
         with col2:
             st.pyplot(fig)
