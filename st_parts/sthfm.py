@@ -38,7 +38,7 @@ def app():
     model_name = st.sidebar.text_input('Specify model name', value=file_name[0:-4]+'_tv' + str(train_validation)[
                                        2:]+'_b'+str(bsize)+'_nl'+str(nlayers)+'_pd'+str(dropout)[2:]+'_l2l'+str(select_l2l)[2:])
     avg_const = 1 #st.sidebar.number_input('Specify average constant:', min_value=1, max_value=60, value=1)
-    expected_u = st.sidebar.number_input('Specify expected U-value', value=4.00)
+    expected_u = st.sidebar.number_input('Specify expected U-value', value=4.00) # if unknown: -666
     model_save = st.sidebar.checkbox('Model save', value=False)
     run_button = st.sidebar.button('Run')
 
