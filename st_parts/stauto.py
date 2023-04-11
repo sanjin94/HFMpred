@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 from typing import Dict
-import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 import uval as U

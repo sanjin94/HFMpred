@@ -3,5 +3,3 @@ numpy
 matplotlib
 streamlit
 torch
-seaborn
-plotly
