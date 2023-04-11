@@ -12,21 +12,6 @@ import os
 import pandas as pd
 import uval as U
 
-#EMOJI_ICON = "icons/HFMpred.ico"
-#EMOJI_PNG = "icons/HFMpred.png"
-
-#st.set_page_config(page_title="HFMpred", page_icon=EMOJI_ICON,
-#                   layout='wide')
-
-#col1, col2 = st.columns(2)
-#with col2:
-#    st.image(EMOJI_PNG, width=80)
-#col1, col2 = st.columns([1.5,6])
-#with col2:
-#    st.title('HFMpred - a tool for HFM results analysis and prediction')
-#col1, col2 = st.columns([5, 6])
-#with col2:
-#    st.markdown('## U-value analysis')
 def app():
     col_input1, col_input2, col_x, col_output = st.columns([2.3, 2.3, 0.4, 6])
 

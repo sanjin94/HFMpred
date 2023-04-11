@@ -24,5 +24,5 @@ app = MultiApp()
 app.add_app("HFM results prediction", sthfm.app)
 app.add_app("DL model automation", stauto.app)
 app.add_app("U-value calculation", stuval.app)
-# Main HFMpred app
+
 app.run()
