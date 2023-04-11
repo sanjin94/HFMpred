@@ -1,0 +1,12 @@
+kind: Service 
+apiVersion: v1 
+metadata:
+  name: hfmpred-svc
+spec:
+  type: NodePort
+  selector:
+    app: hfmpred
+  ports:
+    - nodePort: 30163
+      port: 8080 
+      targetPort: 8501

@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hfmpred
+  labels:
+    app: hfmpred
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hfmpred
+  template:
+    metadata:
+      labels:
+        app: hfmpred
+    spec:
+      containers:
+      - name: hfmpred
+        image: sanjin94/hfmpred:latest
+        ports:
+        - containerPort: 8501

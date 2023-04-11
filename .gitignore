@@ -1,4 +1,5 @@
-/data/model_input
-/data/raw
-/data/data_extract.ipynb
-/results
+data/model_input*
+data/raw*
+data/data_extract.ipynb
+results/*
+*pycache*
