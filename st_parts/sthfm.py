@@ -160,7 +160,7 @@ def app():
                              box.width, box.height * 0.8])
         axes_1.legend(['$\Delta T$ trening', '$\Delta T$ validacija'], loc='lower center', markerscale=5,
                       bbox_to_anchor=(0.25, -0.5), fancybox=True, fontsize=9)
-        axes_2.legend(['q predikcija', 'q trening', 'q validacija'], loc='lower center', markerscale=5,
+        axes_2.legend(['q trening', 'q validacija', 'q predikcija'], loc='lower center', markerscale=5,
                       bbox_to_anchor=(0.75, -0.5), fancybox=True, fontsize=9)
 
         ### Training and validation losses
