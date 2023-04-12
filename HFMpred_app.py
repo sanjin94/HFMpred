@@ -22,7 +22,6 @@ with col2:
 
 app = MultiApp()
 app.add_app("HFM results prediction", sthfm.app)
-app.add_app("DL model automation", stauto.app)
 app.add_app("U-value calculation", stuval.app)
 
 app.run()
