@@ -5,7 +5,7 @@ sys.path.append('icons')
 sys.path.append('data')
 
 import streamlit as st
-from st_parts import stauto, stuval, sthfm
+from st_parts import stuval, sthfm
 
 EMOJI_ICON = "icons/HFMpred.ico"
 EMOJI_PNG = "icons/HFMpred.png"
