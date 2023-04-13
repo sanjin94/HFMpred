@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 jobs:
   review_flow:
-    uses: sanjin94/actions/.github/workflows/delivery_flow.yaml@master
+    uses: sanjin94/actions/.github/workflows/delivery_flow.yaml@e554db3b9b563a2a4e9d3b8bf839cb4f54818ca1
     #uses: ./.github/workflows/delivery_flow.yaml
     #uses: sanjin94/HFMpred/.github/workflows/delivery_flow.yaml@master
     with:
