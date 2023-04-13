@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
 jobs:
   review_flow:
-    #uses: sanjin94/actions/.github/workflows/delivery_flow.yaml@main
+    uses: sanjin94/actions/.github/workflows/delivery_flow.yaml@main
     #uses: ./.github/workflows/delivery_flow.yaml
-    uses: sanjin94/HFMpred/.github/workflows/delivery_flow.yaml@master
+    #uses: sanjin94/HFMpred/.github/workflows/delivery_flow.yaml@master
     with:
       pylint-options: '--disable=R,C'
       python-version: '3.9'
