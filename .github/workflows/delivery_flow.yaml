@@ -26,6 +26,7 @@ jobs:
       #TODO push to hub
       - name: Test telegram
         run: exit 1
+      - uses: actions/checkout
       - name: Notify Telegram on failure
         if: failure()
         uses: sanjin94/HFMpred/.github/actions/telegram_warning@master
@@ -46,6 +47,7 @@ jobs:
           python --version
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - uses: actions/checkout
       - name: Lint code
         uses: sanjin94/HFMpred/.github/actions/static_test@master
         with:
@@ -55,6 +57,7 @@ jobs:
       #  run: pytest tests/
       - name: Test telegram
         run: exit 1
+      - uses: actions/checkout
       - name: Notify Telegram on failure
         if: failure()
         uses: sanjin94/HFMpred/.github/actions/telegram_warning@master
