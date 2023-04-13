@@ -17,12 +17,6 @@ on:
       TELEGRAM_CHAT_ID:
         required: true
   workflow_dispatch:
-    inputs:
-      pylint-options: '--disable=R,C'
-      python-version: '3.9'
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 jobs:
   build:
     runs-on: ubuntu-latest
