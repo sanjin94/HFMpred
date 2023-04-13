@@ -1,0 +1,20 @@
+name: Notify Telegram
+description: 'Send notification to a Telegram bot when a workflow fails'
+inputs:
+  telegram-bot-token:
+    description: 'Telegram bot API token'
+    required: true
+  telegram-chat-id:
+    description: 'Telegram chat ID to send the message to'
+    required: true
+runs:
+  using: 'node12'
+  steps:
+    - name: Install dependencies
+      run: npm install telegram-send-message
+    - name: Notify Telegram
+      run: |
+        const { Telegram } = require('telegram-send-message');
+        const telegram = new Telegram(inputs.telegram-bot-token);
+        const message = `:warning: Workflow failed on \`${{ github.repository }}\`: \`${{ github.workflow }}\`.\n\nCheck it out here: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+        telegram.sendMessage(inputs.telegram-chat-id, message);
