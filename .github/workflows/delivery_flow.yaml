@@ -1,0 +1,63 @@
+name: Delivery flow
+on:
+  workflow_call:
+    inputs:
+      pylint-options: 
+        required: false
+        type: string
+        default: ''
+        description: 'pylint optional arguments'
+      python-version:
+        required: false
+        type: string
+        default: '3.10'
+    secrets:
+      TELEGRAM_BOT_TOKEN:
+        required: true
+      TELEGRAM_CHAT_ID:
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      #TODO build image
+      #TODO push to hub
+      - name: Test telegram
+        run: exit 1
+      - name: Notify Telegram on failure
+        if: failure()
+        uses: sanjin94/HFMpred/.github/actions/telegram_warning@master
+        with:
+          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python-version }}
+      - name: Install dependencies
+        run: |
+          python --version
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Lint code
+        uses: sanjin94/HFMpred/.github/actions/static_test@master
+        with:
+          pylint-options: ${{ inputs.pylint-options }}
+      #TODO
+      #- name: Test code
+      #  run: pytest tests/
+      - name: Test telegram
+        run: exit 1
+      - name: Notify Telegram on failure
+        if: failure()
+        uses: sanjin94/HFMpred/.github/actions/telegram_warning@master
+        with:
+          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}

@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 jobs:
   review_flow:
-    uses: sanjin94/actions/.github/workflows/review_flow.yaml@main
+    #uses: sanjin94/actions/.github/workflows/review_flow.yaml@main
+    uses: sanjin94/HFMpred/.github/workflows/review_flow.yaml@master
     with:
       pylint-options: '--disable=R,C'
       python-version: '3.9'
