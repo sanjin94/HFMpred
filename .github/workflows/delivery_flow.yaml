@@ -11,12 +11,12 @@ jobs:
       #TODO push to hub
       - name: Test telegram
         run: exit 1
-      - name: Notify Telegram on failure
-        if: failure()
-        uses: sanjin94/HFMpred/.ci/actions/telegram_warning.yaml
-        with:
-          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}
+      #- name: Notify Telegram on failure
+      #  if: failure()
+      #  uses: sanjin94/HFMpred/.ci/actions/telegram_warning.yaml
+      #  with:
+      #    telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      #    telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}
   test:
     runs-on: ubuntu-latest
     steps:
@@ -40,10 +40,10 @@ jobs:
       #  run: pytest tests/
       - name: Test telegram
         run: exit 1
-      - name: Notify Telegram on failure
-        if: failure()
-        uses: sanjin94/HFMpred/.ci/actions/telegram_warning.yaml
-        with:
-          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}
+      #- name: Notify Telegram on failure
+      #  if: failure()
+      #  uses: sanjin94/HFMpred/.ci/actions/telegram_warning.yaml
+      #  with:
+      #    telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      #    telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}
 
