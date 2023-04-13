@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 jobs:
   review_flow:
-    uses: ./.github/flows/delivery_flow
+    uses: ./.github/flows/delivery_flow.yaml@master
     with:
       pylint-options: '--disable=R,C'
       python-version: '3.9'
