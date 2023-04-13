@@ -46,7 +46,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Lint code
-        uses: sanjin94/HFMpred/.github/actions/static_test.yaml@/811cfacce37b231c7c4cd45213ed7271f28406dc
+        uses: sanjin94/HFMpred/.github/actions/static_test.yaml@811cfacce37b231c7c4cd45213ed7271f28406dc
         with:
           pylint-options: ${{ inputs.pylint-options }}
       #TODO
