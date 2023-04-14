@@ -9,9 +9,8 @@ inputs:
     required: true
 runs:
   using: 'docker'
-  image: 'docker://alpine:latest'
+  image: 'docker://alpine/curl'
   args:
-    - apk add curl
     #- "MESSAGE=':warning: Workflow failed on ${{ github.repository }}: ${{ github.workflow }}.\n\nCheck it out here: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}'"
     - "MESSAGE='Test!"
     - "BOT_TOKEN='{{ inputs.bot_token }}'"
