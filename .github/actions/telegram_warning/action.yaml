@@ -11,8 +11,10 @@ runs:
   using: 'node16'
   steps:
     - name: Install dependencies
+      shell: bash
       run: npm install telegram-send-message
     - name: Notify Telegram
+      shell: bash
       run: |
         const { Telegram } = require('telegram-send-message');
         const telegram = new Telegram(inputs.telegram-bot-token);
