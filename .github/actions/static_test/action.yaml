@@ -7,7 +7,7 @@ inputs:
     default: ''
 runs:
   using: 'docker'
-  image: 'python:3.10-slim-buster'
+  image: 'docker://python:3.10-slim-buster'
   entrypoint: bash
   args:
     - python -m pip install --upgrade pip
