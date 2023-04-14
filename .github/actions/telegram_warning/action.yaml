@@ -10,9 +10,10 @@ inputs:
 runs:
   using: 'docker'
   image: 'docker://alpine/curl'
+  env:
+    BOT_TOKEN: ${{ inputs.bot_token }}
+    CHAT_ID: ${{ inputs.chat_id }}
   args:
     #- "MESSAGE=':warning: Workflow failed on ${{ github.repository }}: ${{ github.workflow }}.\n\nCheck it out here: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}'"
-    - "MESSAGE='Test!"
-    - "BOT_TOKEN='{{ inputs.bot_token }}'"
-    - "CHAT_ID='{{ inputs.chat_id }}'"
+    - "MESSAGE='Failed!"
     - "curl -s -X POST https://api.telegram.org/bot${BOT_TOKEN}/sendMessage -d chat_id=${CHAT_ID} -d text=${MESSAGE}"
