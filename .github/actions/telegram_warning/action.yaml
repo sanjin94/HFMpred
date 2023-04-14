@@ -8,16 +8,11 @@ inputs:
     description: 'Telegram chat ID to send the message to'
     required: true
 runs:
-  using: composite
-  steps:
-    - name: Install dependencies
-      shell: bash
-      run: |
-        apt-get update && apt-get install -y curl
-    - name: Send message
-      shell: bash
-      run: |
-        MESSAGE=":warning: Workflow failed on ${{ github.repository }}: ${{ github.workflow }}.\n\nCheck it out here: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}
-        BOT_TOKEN="{{ inputs.bot_token }}"
-        CHAT_ID="{{ inputs.chat_id }}"
-        curl -s -X POST https://api.telegram.org/bot${BOT_TOKEN}/sendMessage -d chat_id=${CHAT_ID} -d text="${MESSAGE}"
+  using: 'docker'
+  image: 'docker://python:3.10-slim-buster'
+  args:
+    - apk add curl
+    - 'MESSAGE=":warning: Workflow failed on ${{ github.repository }}: ${{ github.workflow }}.\n\nCheck it out here: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}'
+    - 'BOT_TOKEN="{{ inputs.bot_token }}"'
+    - 'CHAT_ID="{{ inputs.chat_id }}"'
+    - 'curl -s -X POST https://api.telegram.org/bot${BOT_TOKEN}/sendMessage -d chat_id=${CHAT_ID} -d text="${MESSAGE}"'
