@@ -24,14 +24,14 @@ jobs:
         uses: actions/checkout@v2
       #TODO build image
       #TODO push to hub
-      #- name: Test telegram
-      #  run: exit 1
-      #- name: Notify Telegram on failure
-      #  if: failure()
-      #  uses: sanjin94/HFMpred/.github/actions/telegram_warning@master
-      #  with:
-      #    telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      #    telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}
+      - name: Test telegram
+        run: exit 1
+      - name: Notify Telegram on failure
+        if: failure()
+        uses: sanjin94/HFMpred/.github/actions/telegram_warning@master
+        with:
+          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}
   test:
     runs-on: ubuntu-latest
     steps:
@@ -50,14 +50,14 @@ jobs:
         uses: sanjin94/HFMpred/.github/actions/static_test@master
         with:
           pylint-options: ${{ inputs.pylint-options }}
-      #TODO
+      #TODO dynamic test
       #- name: Test code
       #  run: pytest tests/
-      #- name: Test telegram
-      #  run: exit 1
-      #- name: Notify Telegram on failure
-      #  if: failure()
-      #  uses: sanjin94/HFMpred/.github/actions/telegram_warning@master
-      #  with:
-      #    telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      #    telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}
+      - name: Test telegram
+        run: exit 1
+      - name: Notify Telegram on failure
+        if: failure()
+        uses: sanjin94/HFMpred/.github/actions/telegram_warning@master
+        with:
+          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}
