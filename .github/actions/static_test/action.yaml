@@ -9,6 +9,8 @@ runs:
   using: 'docker'
   image: 'docker://python:3.10-slim-buster'
   args:
+    - bash
+    - -c
     - |
       python -m pip install --upgrade pip
       pip install pylint
