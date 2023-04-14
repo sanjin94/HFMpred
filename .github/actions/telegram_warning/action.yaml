@@ -1,22 +1,24 @@
 name: Notify Telegram
 description: 'Send notification to a Telegram bot when a workflow fails'
 inputs:
-  telegram-bot-token:
+  bot_token:
     description: 'Telegram bot API token'
     required: true
-  telegram-chat-id:
+  chat_id:
     description: 'Telegram chat ID to send the message to'
     required: true
 runs:
-  using: 'node16'
+  using: composite
+  env:
+    CHAT_ID: ${{ inputs.chat_id }}
+    BOT_TOKEN: ${{ inputs.bot_token }}
   steps:
     - name: Install dependencies
       shell: bash
-      run: npm install telegram-send-message
-    - name: Notify Telegram
+      run: |
+        apt-get update && apt-get install -y curl
+    - name: Send message
       shell: bash
       run: |
-        const { Telegram } = require('telegram-send-message');
-        const telegram = new Telegram(inputs.telegram-bot-token);
-        const message = `:warning: Workflow failed on \`${{ github.repository }}\`: \`${{ github.workflow }}\`.\n\nCheck it out here: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-        telegram.sendMessage(inputs.telegram-chat-id, message);
+        MESSAGE=":warning: Workflow failed on ${{ github.repository }}: ${{ github.workflow }}.\n\nCheck it out here: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}
+        curl -s -X POST https://api.telegram.org/bot${BOT_TOKEN}/sendMessage -d chat_id=${CHAT_ID} -d text="${MESSAGE}"
