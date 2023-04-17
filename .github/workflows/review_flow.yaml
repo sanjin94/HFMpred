@@ -23,8 +23,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       #TODO build image
-      - name: Test telegram
-        run: exit 1
+      ## Telegram test
+      #- name: Test telegram
+      #  run: exit 1
       - name: Notify Telegram on failure
         if: failure()
         uses: sanjin94/HFMpred/.github/actions/telegram_warning@master
