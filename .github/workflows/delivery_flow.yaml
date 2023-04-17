@@ -53,12 +53,12 @@ jobs:
       #TODO dynamic test
       #- name: Test code
       #  run: pytest tests/
-      - name: Test telegram
-        run: exit 1
+      ## Telegram test
+      #- name: Test telegram
+      #  run: exit 1
       - name: Notify Telegram on failure
         if: failure()
         uses: sanjin94/HFMpred/.github/actions/telegram_warning@master
-        continue-on-error: true
         with:
           bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
